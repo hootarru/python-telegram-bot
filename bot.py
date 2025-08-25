@@ -3,19 +3,24 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 import logging
 import os
 import threading
-import time
+from flask import Flask
 
+# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
+# Получаем токен
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not TOKEN:
     raise ValueError("TELEGRAM_BOT_TOKEN environment variable is not set")
 
 # --- КНОПКИ ---
-keyboard = [["Показать меню"], ["Дополнительные услуги"], ["Режим работы"],
-            ["Связаться с администратором"]]
+keyboard = [
+    ["Показать меню"],
+    ["Дополнительные услуги"],
+    ["Режим работы"],
+    ["Связаться с администратором"]
+]
 reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
 
 # --- ОБРАБОТЧИКИ ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -23,8 +28,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Привет! Я — бот доставки отеля «Царская охота» на Алтае 🌲👋\n"
         "Горный воздух, тишина леса… А еду мы принесём сами — тёплую, домашнюю и прямо к тебе.\n"
         "\nВыбери, что хочешь узнать:",
-        reply_markup=reply_markup)
-
+        reply_markup=reply_markup
+    )
 
 async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -37,15 +42,15 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "📞 <b>Как сделать заказ:</b>\n"
                     "Позвоните нам по номеру телефона:\n"
                     "<a href='tel:+79833292301'>+7 (983) 329-23-01</a>\n\n"
-                    "🚚 <i>Доставка прямо к номеру или в беседку!</i>")
+                    "🚚 <i>Доставка прямо к номеру или в беседку!</i>"
+                )
                 await update.message.reply_document(
                     document=pdf_file,
                     caption=caption,
-                    parse_mode="HTML"  # 🔑 Ключевая строка!
+                    parse_mode="HTML"
                 )
         except FileNotFoundError:
-            await update.message.reply_text(
-                "❗ Ошибка: файл menu.pdf не найден.")
+            await update.message.reply_text("❗ Ошибка: файл menu.pdf не найден.")
         except Exception as e:
             await update.message.reply_text(f"❗ Ошибка: {e}")
 
@@ -55,20 +60,19 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_photo(
                     photo=jpeg_file,
                     caption="📦 <b>Дополнительные услуги:</b>\n\n"
-                    "• Гриль-наборы: свинина, птица, рыба, овощи 🥩\n"
-                    "• Уголь, розжиг, подготовка костровища 🔥\n"
-                    "• Баня с купелью 💦\n"
-                    "• Услуги стирки и глажки 🧺\n\n"
-                    "Закажите всё к себе в номер!\n"
-                    "📞 Звоните: <a href='tel:+79139900025'>+7 (913) 990-00-25</a>\n\n"
-                    "Всё для комфортного отдыха в горах! 🌿",
-                    parse_mode="HTML")
+                            "• Гриль-наборы: свинина, птица, рыба, овощи 🥩\n"
+                            "• Уголь, розжиг, подготовка костровища 🔥\n"
+                            "• Баня с купелью 💦\n"
+                            "• Услуги стирки и глажки 🧺\n\n"
+                            "Закажите всё к себе в номер!\n"
+                            "📞 Звоните: <a href='tel:+79139900025'>+7 (913) 990-00-25</a>\n\n"
+                            "Всё для комфортного отдыха в горах! 🌿",
+                    parse_mode="HTML"
+                )
         except FileNotFoundError:
-            await update.message.reply_text(
-                "❗ Ошибка: файл dop.jpeg не найден.")
+            await update.message.reply_text("❗ Ошибка: файл dop.jpeg не найден.")
         except Exception as e:
-            await update.message.reply_text(f"❗ Ошибка при отправке файла: {e}"
-                                            )
+            await update.message.reply_text(f"❗ Ошибка: {e}")
 
     elif text == "Режим работы":
         try:
@@ -85,56 +89,24 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Позвоните нам по номеру телефона:\n"
                 '<a href="tel:+79833292301">+7 (983) 329-23-01</a>\n\n'
                 "🚚 Доставка прямо к номеру или в беседку!",
-                parse_mode="HTML")
+                parse_mode="HTML"
+            )
         except Exception as e:
-            await update.message.reply_text(
-                f"❗ Ошибка: не удалось отправить сообщение. {e}")
+            await update.message.reply_text(f"❗ Ошибка: {e}")
 
     elif text == "Связаться с администратором":
         await update.message.reply_text(
             "📞 Напишите администратору: @tsarskaya_ohota_altay\n"
-            "Или звоните: +7 (913) 990-00-25")
+            "Или звоните: +7 (913) 990-00-25"
+        )
 
     else:
-        await update.message.reply_text("Пожалуйста, используйте кнопки ниже.",
-                                        reply_markup=reply_markup)
+        await update.message.reply_text(
+            "Пожалуйста, используйте кнопки ниже.",
+            reply_markup=reply_markup
+        )
 
-
-# --- ЗАПУСК ---
-def keep_alive():
-    """Функция для поддержания активности"""
-    while True:
-        time.sleep(600)  # Пауза 10 минут
-        print("🔄 Бот активен...")
-
-
-def main():
-    # Запуск keep-alive в отдельном потоке
-    threading.Thread(target=keep_alive, daemon=True).start()
-
-    app = Application.builder() \
-        .token(TOKEN) \
-        .read_timeout(30) \
-        .connect_timeout(30) \
-        .write_timeout(30) \
-        .pool_timeout(30) \
-        .build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
-
-    print("✅ Бот запущен! Готов к работе...")
-    app.run_polling()
-
-
-if __name__ == "__main__":
-    main()
-# --- ЗАПУСК БОТА В ОТДЕЛЬНОМ ПОТОКЕ ---
-from threading import Thread
-from flask import Flask
-
-# Создаём пустой веб-сервер, чтобы Render не "убил" сервис
+# --- ВЕБ-СЕРВЕР ДЛЯ RENDER ---
 app = Flask(__name__)
 
 @app.route('/')
@@ -145,13 +117,24 @@ def run_server():
     port = int(os.getenv('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
 
-# Запускаем сервер и бота параллельно
-if __name__ == "__main__":
+# --- ЗАПУСК БОТА ---
+def main():
     # Запускаем веб-сервер в отдельном потоке
-    server_thread = Thread(target=run_server)
+    server_thread = threading.Thread(target=run_server)
     server_thread.daemon = True
     server_thread.start()
 
-    # Запускаем бота
-    print("✅ Бот запущен!")
-    main()  # твой основной запуск app.run_polling()
+    # Создаём приложение бота
+    application = Application.builder().token(TOKEN).build()
+
+    # Добавляем обработчики
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
+
+    # Запускаем polling
+    print("✅ Бот запущен и слушает обновления...")
+    application.run_polling()
+
+# Запуск
+if __name__ == "__main__":
+    main()
