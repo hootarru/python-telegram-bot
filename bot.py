@@ -130,3 +130,28 @@ def main():
 
 if __name__ == "__main__":
     main()
+# --- ЗАПУСК БОТА В ОТДЕЛЬНОМ ПОТОКЕ ---
+from threading import Thread
+from flask import Flask
+
+# Создаём пустой веб-сервер, чтобы Render не "убил" сервис
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "✅ Бот работает! Это техническая страница для Render."
+
+def run_server():
+    port = int(os.getenv('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
+
+# Запускаем сервер и бота параллельно
+if __name__ == "__main__":
+    # Запускаем веб-сервер в отдельном потоке
+    server_thread = Thread(target=run_server)
+    server_thread.daemon = True
+    server_thread.start()
+
+    # Запускаем бота
+    print("✅ Бот запущен!")
+    main()  # твой основной запуск app.run_polling()
