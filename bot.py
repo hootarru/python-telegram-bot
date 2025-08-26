@@ -1,4 +1,4 @@
-from telegram import Update, ReplyKeyboardMarkup, InputMediaPhoto  # ✅ Добавлен InputMediaPhoto
+from telegram import Update, ReplyKeyboardMarkup, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from flask import Flask
 import os
@@ -37,7 +37,6 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "Показать меню":
         try:
             with open("menu11.jpg", "rb") as photo1, open("menu22.jpg", "rb") as photo2:
-                # ✅ Правильное создание медиа-группы
                 media = [
                     InputMediaPhoto(
                         media=photo1,
@@ -49,7 +48,7 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         parse_mode="HTML"
                     ),
                     InputMediaPhoto(
-                        media=photo2  # Второе фото без подписи
+                        media=photo2
                     )
                 ]
                 await update.message.reply_media_group(media=media)
@@ -118,17 +117,15 @@ def home():
     return "✅ Бот работает! Это техническая страница для Render."
 
 def run_server():
-    port = int(os.getenv('PORT', 10000))  # Render передаёт PORT
+    port = int(os.getenv('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
 
 # --- ЗАПУСК БОТА ---
 def main():
-    # Запускаем веб-сервер в отдельном потоке
     server_thread = threading.Thread(target=run_server)
     server_thread.daemon = True
     server_thread.start()
 
-    # Создаём бота
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
