@@ -1,17 +1,17 @@
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-import logging
+from flask import Flask
 import os
 import threading
-from flask import Flask
 
-# Настройка логирования
+# Логирование
+import logging
 logging.basicConfig(level=logging.INFO)
 
-# Получаем токен
+# Токен
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not TOKEN:
-    raise ValueError("TELEGRAM_BOT_TOKEN environment variable is not set")
+    raise ValueError("TELEGRAM_BOT_TOKEN не установлен")
 
 # --- КНОПКИ ---
 keyboard = [
@@ -36,21 +36,27 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if text == "Показать меню":
         try:
-            with open("menu.pdf", "rb") as pdf_file:
-                caption = (
-                    "📄 Вот наше меню — выбирайте, что душе угодно! 🍽️\n\n"
-                    "📞 <b>Как сделать заказ:</b>\n"
-                    "Позвоните нам по номеру телефона:\n"
-                    "<a href='tel:+79833292301'>+7 (983) 329-23-01</a>\n\n"
-                    "🚚 <i>Доставка прямо к номеру или в беседку!</i>"
-                )
-                await update.message.reply_document(
-                    document=pdf_file,
-                    caption=caption,
-                    parse_mode="HTML"
-                )
+         with open("menu11.jpg", "rb") as photo1, open("menu22.jpg", "rb") as photo2:
+            media = [
+                {
+                    "type": "photo",
+                    "media": photo1,
+                    "caption": 
+                        "📄 Вот наше меню — выбирайте, что душе угодно! 🍽️\n\n"
+                        "📞 <b>Как сделать заказ:</b>\n"
+                        "Позвоните нам по номеру телефона:\n"
+                        "<a href='tel:+79833292301'>+7 (983) 329-23-01</a>\n\n"
+                        "🚚 <i>Доставка прямо к номеру или в беседку!</i>",
+                    "parse_mode": "HTML"
+                },
+                {
+                    "type": "photo",
+                    "media": photo2
+                }
+            ]
+            await update.message.reply_media_group(media=media)
         except FileNotFoundError:
-            await update.message.reply_text("❗ Ошибка: файл menu.pdf не найден.")
+            await update.message.reply_text("❗ Ошибка: файлы menu11.jpg или menu22.jpg не найдены.")
         except Exception as e:
             await update.message.reply_text(f"❗ Ошибка: {e}")
 
@@ -114,7 +120,7 @@ def home():
     return "✅ Бот работает! Это техническая страница для Render."
 
 def run_server():
-    port = int(os.getenv('PORT', 10000))
+    port = int(os.getenv('PORT', 10000))  # Render передаёт PORT
     app.run(host='0.0.0.0', port=port)
 
 # --- ЗАПУСК БОТА ---
@@ -124,14 +130,11 @@ def main():
     server_thread.daemon = True
     server_thread.start()
 
-    # Создаём приложение бота
+    # Создаём бота
     application = Application.builder().token(TOKEN).build()
-
-    # Добавляем обработчики
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_buttons))
 
-    # Запускаем polling
     print("✅ Бот запущен и слушает обновления...")
     application.run_polling()
 
