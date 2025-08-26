@@ -1,4 +1,4 @@
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, InputMediaPhoto  # ✅ Добавлен InputMediaPhoto
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from flask import Flask
 import os
@@ -36,25 +36,23 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if text == "Показать меню":
         try:
-         with open("menu11.jpg", "rb") as photo1, open("menu22.jpg", "rb") as photo2:
-            media = [
-                {
-                    "type": "photo",
-                    "media": photo1,
-                    "caption": 
-                        "📄 Вот наше меню — выбирайте, что душе угодно! 🍽️\n\n"
-                        "📞 <b>Как сделать заказ:</b>\n"
-                        "Позвоните нам по номеру телефона:\n"
-                        "<a href='tel:+79833292301'>+7 (983) 329-23-01</a>\n\n"
-                        "🚚 <i>Доставка прямо к номеру или в беседку!</i>",
-                    "parse_mode": "HTML"
-                },
-                {
-                    "type": "photo",
-                    "media": photo2
-                }
-            ]
-            await update.message.reply_media_group(media=media)
+            with open("menu11.jpg", "rb") as photo1, open("menu22.jpg", "rb") as photo2:
+                # ✅ Правильное создание медиа-группы
+                media = [
+                    InputMediaPhoto(
+                        media=photo1,
+                        caption="📄 Вот наше меню — выбирайте, что душе угодно! 🍽️\n\n"
+                                "📞 <b>Как сделать заказ:</b>\n"
+                                "Позвоните нам по номеру телефона:\n"
+                                "<a href='tel:+79833292301'>+7 (983) 329-23-01</a>\n\n"
+                                "🚚 <i>Доставка прямо к номеру или в беседку!</i>",
+                        parse_mode="HTML"
+                    ),
+                    InputMediaPhoto(
+                        media=photo2  # Второе фото без подписи
+                    )
+                ]
+                await update.message.reply_media_group(media=media)
         except FileNotFoundError:
             await update.message.reply_text("❗ Ошибка: файлы menu11.jpg или menu22.jpg не найдены.")
         except Exception as e:
